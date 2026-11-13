@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createFurnitureModel } from '../assets/furniture.js';
-import { getFurniture } from '../room/furniture.js';
+import { furnitureTransform } from '../room/schema.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export default function Room3D({ room }) {
+export default function Room3D({ room, selectedId, onSelect }) {
   const host = useRef(null);
   const actions = useRef({});
+  const cameraState = useRef(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function Room3D({ room }) {
     box(room.width, 0.12, room.depth, 0, -0.06, 0, room.floorColor);
     // Interior-facing planes hide near walls from outside, keeping the room visible.
     const wallMaterial = new THREE.MeshStandardMaterial({ color: room.wallColor, side: THREE.FrontSide, roughness: 0.9 });
-    const height = 2.7;
+    const height = room.height;
     for (const [width, x, z, rotation] of [
       [room.width, 0, -room.depth / 2, 0],
       [room.width, 0, room.depth / 2, Math.PI],
@@ -69,14 +70,31 @@ export default function Room3D({ room }) {
       scene.add(wall);
     }
     for (const item of room.furniture) {
-      const asset = getFurniture(item.type);
       const model = createFurnitureModel(item.type);
       if (!model) continue;
-      model.position.set(room.width * (item.x / 100 - 0.5) + asset.width / 2, 0, room.depth * (item.y / 100 - 0.5) + asset.depth / 2);
-      model.rotation.y = -THREE.MathUtils.degToRad(item.rotation);
+      const transform = furnitureTransform(room, item);
+      model.position.set(transform.x, transform.y, transform.z);
+      model.rotation.y = transform.rotationY;
+      model.traverse(object => { object.userData.itemId = item.id; });
       scene.add(model);
+      if (item.id === selectedId) {
+        scene.add(new THREE.BoxHelper(model, '#517b38'));
+      }
     }
 
+    const raycaster = new THREE.Raycaster();
+    let pointerStart = null;
+    const pointerDown = event => { pointerStart = { x: event.clientX, y: event.clientY }; };
+    const pointerUp = event => {
+      if (!onSelect || event.button !== 0 || !pointerStart || Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 5) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      raycaster.setFromCamera(new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1), camera);
+      const hit = raycaster.intersectObjects(scene.children, true).find(hit => hit.object.isMesh);
+      onSelect(hit?.object.userData.itemId || null);
+      pointerStart = null;
+    };
+    renderer.domElement.addEventListener('pointerdown', pointerDown);
+    renderer.domElement.addEventListener('pointerup', pointerUp);
     const resize = new ResizeObserver(() => {
       const { width, height } = container.getBoundingClientRect();
       camera.aspect = width / Math.max(height, 1);
@@ -86,10 +104,17 @@ export default function Room3D({ room }) {
     });
     camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
     camera.updateProjectionMatrix();
-    reset();
+    if (cameraState.current) {
+      camera.position.copy(cameraState.current.position);
+      controls.target.copy(cameraState.current.target);
+      controls.update();
+    } else reset();
     resize.observe(container);
     controls.addEventListener('change', render);
     return () => {
+      cameraState.current = { position: camera.position.clone(), target: controls.target.clone() };
+      renderer.domElement.removeEventListener('pointerdown', pointerDown);
+      renderer.domElement.removeEventListener('pointerup', pointerUp);
       resize.disconnect();
       controls.dispose();
       const materials = new Set();
@@ -99,7 +124,7 @@ export default function Room3D({ room }) {
       renderer.domElement.remove();
       actions.current = {};
     };
-  }, [room.width, room.depth, room.wallColor, room.floorColor, room.furniture]);
+  }, [room.width, room.depth, room.height, room.wallColor, room.floorColor, room.furniture, selectedId, onSelect]);
 
   return <div className="room-3d"><div ref={host} className="room-3d-canvas"/>{error ? <p role="alert" className="room-3d-help">{error}</p> : <><div className="camera-actions"><button className="secondary" onClick={() => actions.current.zoom?.(0.8)} aria-label="Zoom in">+</button><button className="secondary" onClick={() => actions.current.zoom?.(1.25)} aria-label="Zoom out">−</button><button className="secondary" onClick={() => actions.current.reset?.()}>Reset view</button></div><p className="room-3d-help">Drag to orbit · Scroll to zoom · Right-drag to pan<br/>Touch: one finger to orbit, two to zoom or pan</p></>}</div>;
 }

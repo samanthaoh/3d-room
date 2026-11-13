@@ -68,3 +68,13 @@ In Furnish, add each of the seven furniture types and inspect its geometry in 3D
 My spaces displays saved projects as preview cards with room names, dimensions, furniture counts, and saved dates. Search by name or sort by most recently saved/name; Open space resumes editing. Create a space is available in the header and grid. An empty library explains how to create and save a first room, and unmatched searches offer Clear search. Projects remain browser-local.
 
 Manual checks: save two rooms with different names; verify previews and dates, search and clear, switch sort order, and reopen each room. Check the empty state in a browser with no saved projects, then inspect the layout at mobile and desktop widths.
+
+## Shared room data
+
+The [version 1 room-data contract](docs/room-data.md) defines room dimensions, furniture positions and rotations, coordinate conversions, validation, and migration of existing saves. Dimensions use metres; furniture anchors use floor-plan percentages and rotations use clockwise degrees. Use the shared factories and helpers in `src/room/schema.js` and `src/room/model.js` when adding features.
+
+## Furniture selection and placement
+
+In Furnish, select a catalog card and use Add to room. New pieces start centered and are automatically selected; pieces larger than the room are disabled. Select placed objects by clicking in 2D/3D or using the accessible room list. The selected item has a visible outline and position, rotation, and removal controls. Camera position is retained during furniture edits. Placement does not prevent overlap with other furniture.
+
+Manual checks: add two copies of a piece, select each in both views and the room list, move/rotate/remove the selected instance, and verify the other remains unchanged. Orbit the camera and confirm dragging does not select an object; save and reopen to check placements persist. Check keyboard selection in the catalog, room list, and 2D view. Test a small room to verify oversized pieces cannot be added.
