@@ -62,3 +62,9 @@ Include screenshots or recordings when submitting visual changes for review.
 ## Furniture library verification
 
 In Furnish, add each of the seven furniture types and inspect its geometry in 3D. Switch to 2D, move and rotate items, then save and reopen the room. Verify the furniture retains its size when changing room dimensions. Automated tests cover model bounds, floor alignment, and persistence of all catalog items. Models are generated locally with no external asset downloads.
+
+## Saved-spaces library
+
+My spaces displays saved projects as preview cards with room names, dimensions, furniture counts, and saved dates. Search by name or sort by most recently saved/name; Open space resumes editing. Create a space is available in the header and grid. An empty library explains how to create and save a first room, and unmatched searches offer Clear search. Projects remain browser-local.
+
+Manual checks: save two rooms with different names; verify previews and dates, search and clear, switch sort order, and reopen each room. Check the empty state in a browser with no saved projects, then inspect the layout at mobile and desktop widths.
