@@ -1,0 +1,4 @@
+import RoomPreview from '../components/RoomPreview';
+export default function Library({ spaces, start, open }) {
+  return <><div className="editor-heading"><div><span className="eyebrow">ROOM FOR MORE IDEAS</span><h1>Your saved spaces.</h1><p>Pick up where you left off. Saved on this browser.</p></div><button onClick={start}>+ Create a space</button></div>{spaces.length ? <div className="library-grid">{spaces.map(room => <button className="space-card" key={room.id} onClick={() => open(room)}><RoomPreview room={room}/><div><h2>{room.name || 'Untitled space'}</h2><p>{room.width} × {room.depth} m · {room.furniture.length} pieces</p><span>Open space ↗</span></div></button>)}</div> : <section className="empty-state"><span className="upload-icon">⌂</span><h2>Your ideas belong here.</h2><p>Create your first space, then save it to come back anytime.</p><button onClick={start}>Create your first space →</button></section>}</>;
+}
