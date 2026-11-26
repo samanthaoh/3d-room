@@ -1,3 +1,4 @@
+import { isReferenceImage } from './reference.js';
 import { getFurniture } from './furniture.js';
 
 export const ROOM_SCHEMA_VERSION = 1;
@@ -22,6 +23,7 @@ export const DEFAULT_WALL_HEIGHT = 2.7;
  * @property {string} wallColor Six-digit hex color.
  * @property {string} floorColor Six-digit hex color.
  * @property {string} source Filename or 'Demo layout'; no file contents.
+ * @property {string|null} [referenceImage] Compact PNG/JPEG data URL, stored locally.
  * @property {FurnitureItem[]} furniture
  * @property {string} [updatedAt] UTC ISO timestamp, set when saved.
  */
@@ -35,6 +37,7 @@ export function isRoom(room) {
   if (![room.width, room.depth, room.height].every(value => inRange(value, 1, 30))) return false;
   if (!color(room.wallColor) || !color(room.floorColor) || typeof room.source !== 'string' || !Array.isArray(room.furniture)) return false;
   if (room.updatedAt !== undefined && (typeof room.updatedAt !== 'string' || !Number.isFinite(Date.parse(room.updatedAt)) || new Date(room.updatedAt).toISOString() !== room.updatedAt)) return false;
+  if (room.referenceImage !== undefined && !isReferenceImage(room.referenceImage)) return false;
   const ids = new Set();
   return room.furniture.every(item => {
     if (!item || !identifier(item.id) || ids.has(item.id) || !getFurniture(item.type)) return false;

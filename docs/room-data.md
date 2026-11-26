@@ -30,6 +30,7 @@ Use this structure for editor state, browser saves, and JSON exports. Runtime va
 | `width`, `depth`, `height` | Finite numbers in metres, each from 1 through 30. Default height is 2.7. |
 | `wallColor`, `floorColor` | Six-digit `#RRGGBB` strings. |
 | `source` | Filename or `Demo layout`; no binary upload data. |
+| `referenceImage` | Optional compact PNG/JPEG base64 data URL (up to 1,500,000 characters), or `null`. Included in browser saves and JSON exports; absence is valid for older rooms. |
 | `furniture` | Array of independently positioned furniture instances. |
 | `updatedAt` | Optional until saved, then a canonical UTC ISO timestamp. |
 
@@ -56,4 +57,10 @@ The localStorage key `3d-room.spaces` holds a JSON array of rooms. Saving valida
 
 `normalizeRoom` upgrades unversioned saves in memory by adding version 1 and a default height. Existing positions and rotations are preserved. Reading does not rewrite storage; the upgraded shape is written when the user saves. Invalid records and unsupported versions are skipped on read without deleting the underlying storage. Malformed JSON yields an empty library. The current app has no import UI or cloud storage.
 
-Use `createRoom()` and `createFurnitureItem(type)` for new objects, `normalizeRotation()` for rotation changes, and `normalizeRoom()` at data boundaries. Do not persist Three.js objects, CSS styles, camera state, or uploaded files. New coordinate systems, catalog dimension changes, and renaming catalog IDs require an explicit compatibility decision.
+Use `createRoom()` and `createFurnitureItem(type)` for new objects, `normalizeRotation()` for rotation changes, and `normalizeRoom()` at data boundaries. Do not persist Three.js objects, CSS styles, camera state, or original uploaded files. A compact image copy is allowed in `referenceImage`. New coordinate systems, catalog dimension changes, and renaming catalog IDs require an explicit compatibility decision.
+
+## Dimension controls
+
+The UI calls `depth` **Length**. Presets and custom entries use `parseDimensions` in `src/room/dimensions.js`; only a complete valid dimension set is applied. Preset names are not stored: dimensions are authoritative. No schema change is needed for presets. On resize, furniture dimensions remain fixed and percentage anchors remain unchanged.
+
+`loadSpace(storage, id)` reads the latest record and returns a validated independent room snapshot for editing. Saving reads the stored array strictly before writing; malformed or inaccessible storage causes an error. Unsupported records are preserved when saving another room. Library refreshes do not replace the active draft. Selection and camera state remain transient.

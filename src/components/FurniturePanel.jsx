@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { furnitureCatalog, getFurniture } from '../room/furniture.js';
 import { normalizeRotation } from '../room/schema.js';
 
-export default function FurniturePanel({ room, update, selectedId, select }) {
+export default function FurniturePanel({ room, update, selectedId, select, onDelete }) {
   const [type, setType] = useState('sofa');
   const [message, setMessage] = useState('');
   const asset = getFurniture(type);
@@ -20,8 +20,8 @@ export default function FurniturePanel({ room, update, selectedId, select }) {
     update({ furniture: room.furniture.map(item => item.id === selectedId ? { ...item, ...patch } : item) });
   }
   return <>
-    <h3>Choose furniture</h3>
-    <div className="catalog">{furnitureCatalog.map(item => <button className="secondary" key={item.type} aria-pressed={type === item.type} onClick={() => { setType(item.type); setMessage(''); }}><span aria-hidden="true">{item.symbol}</span><strong>{item.name}</strong><small>{item.width} × {item.depth} m</small></button>)}</div>
+    <h3>Add an object</h3><p className="panel-instruction">Choose a piece, then add it to your room.</p>
+    <div className="catalog" id="furniture-catalog" aria-label="Furniture catalog">{furnitureCatalog.map(item => <button className="secondary" key={item.type} aria-pressed={type === item.type} onClick={() => { setType(item.type); setMessage(''); }}><span aria-hidden="true">{item.symbol}</span><strong>{item.name}</strong><small>{item.width} × {item.depth} m</small></button>)}</div>
     <button disabled={!fits} onClick={add}>+ Add {asset.name.toLowerCase()} to room</button>
     {!fits && <p className="notice">This piece is too large for the room. Choose a smaller piece or adjust the room dimensions.</p>}
     <p className="placement-status" role="status">{message || 'New pieces start in the center. Move them apart using the controls below.'}</p>
@@ -30,8 +30,9 @@ export default function FurniturePanel({ room, update, selectedId, select }) {
     {selected && <fieldset className="selected-controls"><legend>{getFurniture(selected.type).name} · Selected</legend>
       <label>Horizontal · {Math.round(selected.x)}%<input type="range" min="0" max="100" step="0.1" value={selected.x} onChange={event => change({ x: Number(event.target.value) })}/></label>
       <label>Vertical · {Math.round(selected.y)}%<input type="range" min="0" max="100" step="0.1" value={selected.y} onChange={event => change({ y: Number(event.target.value) })}/></label>
-      <div className="actions"><button className="text-button" onClick={() => change({ rotation: normalizeRotation(selected.rotation + 45) })}>Rotate ↻ {selected.rotation}°</button><button className="text-button" onClick={() => { update({ furniture: room.furniture.filter(item => item.id !== selectedId) }); select(null); setMessage('Furniture removed.'); }}>Remove</button></div>
-      <p className="notice">Pieces can overlap or extend beyond walls. Check your arrangement in both views.</p>
+      <label>Rotation · {Math.round(selected.rotation)}°<input type="range" min="0" max="359" step="1" value={selected.rotation} onChange={event => change({ rotation: Number(event.target.value) })}/></label>
+      <div className="selected-button-grid"><button className="secondary" onClick={() => change({ rotation: normalizeRotation(selected.rotation - 45) })}>↶ Left 45°</button><button className="secondary" onClick={() => change({ rotation: normalizeRotation(selected.rotation + 45) })}>↷ Right 45°</button><button className="danger-button" onClick={onDelete}>Delete object</button></div>
+      <p className="notice">Fit warnings update after each change. You can still move, rotate, and save pieces with warnings.</p>
     </fieldset>}
   </>;
 }

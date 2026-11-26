@@ -1,0 +1,52 @@
+import { test, expect } from '@playwright/test';
+const feedback = page => page.getByRole('region', { name: 'Furniture fit checks' });
+
+test('fit warnings update for overlaps, movement, rotation, deletion and reopening', async ({ page }, testInfo) => {
+  await page.goto('/#furnish');
+  await page.getByRole('button', { name: 'Add couch to room' }).click();
+  await expect(feedback(page)).toContainText('No boundary or overlap issues found.');
+  await page.getByRole('button', { name: 'Add couch to room' }).click();
+  await expect(feedback(page)).toContainText('Couch 1 overlaps Couch 2.');
+  await page.getByRole('slider', { name: /Vertical/ }).fill('75');
+  await expect(feedback(page)).toContainText('No boundary or overlap issues found.');
+  await page.getByRole('slider', { name: /Horizontal/ }).fill('100');
+  await expect(feedback(page)).toContainText('Couch 2 extends beyond the room boundary.');
+  await page.getByRole('button', { name: 'Save & return to library' }).click();
+  await expect(page).toHaveURL(/#library$/);
+  await page.reload();
+  await page.getByRole('button', { name: 'Open My living room' }).click();
+  await expect(feedback(page)).toContainText('Couch 2 extends beyond the room boundary.');
+  await page.locator('.placed-items button').nth(1).click();
+  await page.getByRole('button', { name: 'Delete object', exact: true }).first().click();
+  await expect(feedback(page)).toContainText('No boundary or overlap issues found.');
+  await page.locator('.placed-items button').first().click();
+  await page.getByRole('slider', { name: /Horizontal/ }).fill('0');
+  await page.getByRole('slider', { name: /Vertical/ }).fill('0');
+  await expect(feedback(page)).toContainText('No boundary or overlap issues found.');
+  await page.getByRole('slider', { name: /Rotation/ }).fill('90');
+  await expect(feedback(page)).toContainText('Couch 1 extends beyond the room boundary.');
+  await page.getByRole('button', { name: '2D', exact: true }).click();
+  await expect(feedback(page)).toContainText('Couch 1 extends beyond the room boundary.');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await feedback(page).scrollIntoViewIfNeeded();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('fit-warning-mobile.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Delete object', exact: true }).first().click();
+  await expect(feedback(page)).toHaveCount(0);
+});
+
+test('resizing the room warns about existing furniture and resolves when enlarged', async ({ page }) => {
+  await page.goto('/#furnish');
+  await page.locator('#furniture-catalog').getByRole('button', { name: /^Bookshelf/ }).click();
+  await page.getByRole('button', { name: 'Add bookshelf to room' }).click();
+  await page.getByRole('link', { name: /Check walls/ }).click();
+  await page.getByLabel('Width (m)', { exact: true }).fill('1');
+  await page.getByLabel('Wall height (m)', { exact: true }).fill('1');
+  await page.getByRole('button', { name: 'Apply dimensions' }).click();
+  await expect(feedback(page)).toContainText('Bookshelf 1 extends beyond the room boundary.');
+  await expect(feedback(page)).toContainText('Bookshelf 1 is taller than the room.');
+  await page.getByLabel('Width (m)', { exact: true }).fill('5');
+  await page.getByLabel('Wall height (m)', { exact: true }).fill('2.7');
+  await page.getByRole('button', { name: 'Apply dimensions' }).click();
+  await expect(feedback(page)).toContainText('No boundary or overlap issues found.');
+});

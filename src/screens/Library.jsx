@@ -6,7 +6,7 @@ function savedDate(value) {
   return Number.isNaN(date.getTime()) ? 'Saved project' : `Saved ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
 }
 
-export default function Library({ spaces, start, open }) {
+export default function Library({ spaces, start, open, notice, storageError = '' }) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('recent');
   const projects = spaces.filter(room => (room.name || 'Untitled space').toLowerCase().includes(query.trim().toLowerCase())).sort((a, b) => sort === 'name'
@@ -18,6 +18,7 @@ export default function Library({ spaces, start, open }) {
       <div><span className="eyebrow">YOUR PERSONAL DESIGN STUDIO</span><h1 id="library-title">Your saved spaces<span>.</span></h1><p>Ideas worth coming back to. Pick a room and make it a little more you.</p></div>
       <button onClick={start}>+ Create a space</button>
     </div>
+    {(notice || storageError) && <p className="notice" role="alert">{notice || storageError}</p>}
     <div className="library-storage"><span aria-hidden="true">⌂</span><div><strong>A home for your ideas</strong><p>Your projects are saved in this browser, ready whenever inspiration returns.</p></div><span className="local-badge">Saved locally</span></div>
     <div className="library-toolbar">
       <h2>All spaces <span>{spaces.length}</span></h2>
@@ -26,7 +27,7 @@ export default function Library({ spaces, start, open }) {
         <label className="library-sort"><span className="sr-only">Sort saved spaces</span><select value={sort} onChange={event => setSort(event.target.value)}><option value="recent">Recently saved</option><option value="name">Name: A–Z</option></select></label>
       </div>
     </div>
-    {spaces.length === 0 ? <div className="library-empty">
+    {spaces.length === 0 ? storageError ? null : <div className="library-empty">
       <div className="empty-room-icon" aria-hidden="true">⌂</div><span className="eyebrow">A BLANK CANVAS, A FRESH START</span><h2>Make space for your first idea.</h2><p>Start with a floor plan or a sample room.<br/>Save your design and it will be waiting right here.</p><button onClick={start}>Create your first space ↗</button>
       <div className="empty-journey"><span>01 &nbsp; Plan your room</span><span>02 &nbsp; Make it yours</span><span>03 &nbsp; Save for later</span></div>
     </div> : projects.length === 0 ? <div className="library-no-results" role="status"><h2>No spaces found.</h2><p>Try a different room name to find your project.</p><button className="secondary" onClick={() => setQuery('')}>Clear search</button></div> : <div className="library-grid">

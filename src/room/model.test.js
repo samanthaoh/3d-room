@@ -22,3 +22,14 @@ test('invalid saved data does not break the library', () => {
   const store = storage(); store.setItem('3d-room.spaces', '{bad'); assert.deepEqual(readSpaces(store), []);
   store.setItem('3d-room.spaces', '[null, {"id":"bad"}]'); assert.deepEqual(readSpaces(store), []);
 });
+
+test('uploads reject empty files and enforce the inclusive 10 MB limit', () => {
+  for (const size of [0, -1, NaN, undefined]) {
+    assert.match(validateUpload({ type: 'image/png', size }), /empty or unreadable/);
+  }
+  assert.equal(validateUpload({ type: 'image/png', size: 10 * 1024 * 1024 }), '');
+  assert.match(validateUpload({ type: 'image/png', size: 10 * 1024 * 1024 + 1 }), /10 MB or smaller/);
+  for (const type of ['image/svg+xml', 'image/webp', 'text/plain', '']) {
+    assert.match(validateUpload({ name: 'plan.png', type, size: 100 }), /JPG, PNG, or PDF/);
+  }
+});

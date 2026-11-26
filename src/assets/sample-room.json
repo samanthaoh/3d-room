@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "sample-living-dining",
+  "name": "Sage & Oak \u00b7 Living + Dining",
+  "width": 6,
+  "depth": 5,
+  "height": 2.7,
+  "wallColor": "#e5e9dc",
+  "floorColor": "#c9a77d",
+  "source": "Demo layout",
+  "referenceImage": null,
+  "furniture": [
+    {
+      "id": "sample-1",
+      "type": "sofa",
+      "x": 10.833333333333332,
+      "y": 9.0,
+      "rotation": 0
+    },
+    {
+      "id": "sample-2",
+      "type": "chair",
+      "x": 52.5,
+      "y": 28.999999999999996,
+      "rotation": 45
+    },
+    {
+      "id": "sample-3",
+      "type": "plant",
+      "x": 52.5,
+      "y": 6.000000000000001,
+      "rotation": 0
+    },
+    {
+      "id": "sample-4",
+      "type": "bookshelf",
+      "x": 2.5,
+      "y": 56.50000000000001,
+      "rotation": 270
+    },
+    {
+      "id": "sample-5",
+      "type": "dresser",
+      "x": 70.0,
+      "y": 3.0000000000000004,
+      "rotation": 0
+    },
+    {
+      "id": "sample-6",
+      "type": "table",
+      "x": 65.83333333333333,
+      "y": 57.49999999999999,
+      "rotation": 90
+    },
+    {
+      "id": "sample-7",
+      "type": "chair",
+      "x": 56.666666666666664,
+      "y": 60.0,
+      "rotation": 270
+    },
+    {
+      "id": "sample-8",
+      "type": "chair",
+      "x": 86.66666666666667,
+      "y": 60.0,
+      "rotation": 90
+    }
+  ]
+}

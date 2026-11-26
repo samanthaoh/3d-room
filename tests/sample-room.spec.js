@@ -1,0 +1,41 @@
+import { test, expect } from '@playwright/test';
+import sample from '../src/assets/sample-room.json' with { type: 'json' };
+
+const savedRooms = page => page.evaluate(() => JSON.parse(localStorage.getItem('3d-room.spaces')));
+const transforms = furniture => furniture.map(({ id, ...item }) => item);
+
+test('sample opens, saves, reopens and resets without replacing an existing saved demo', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Open sample room/ }).click();
+  await expect(page).toHaveURL(/#furnish$/);
+  await expect(page.getByLabel('Space name')).toHaveValue(sample.name);
+  await expect(page.getByRole('heading', { name: 'In your room · 8' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Furniture fit checks' })).toContainText('No boundary or overlap issues found.');
+  await expect(page.locator('.room-3d canvas')).toBeVisible();
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await page.locator('.canvas-panel').screenshot({ path: testInfo.outputPath('sample-room-3d.png') });
+  await page.getByRole('button', { name: '2D', exact: true }).click();
+  await page.locator('.canvas-panel').screenshot({ path: testInfo.outputPath('sample-room-2d.png') });
+  await page.getByRole('button', { name: 'Save & return to library' }).click();
+  await expect(page).toHaveURL(/#library$/);
+  const saved = (await savedRooms(page))[0];
+  expect(transforms(saved.furniture)).toEqual(transforms(sample.furniture));
+  await page.reload();
+  await page.getByRole('button', { name: `Open ${sample.name}`, exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'In your room · 8' })).toBeVisible();
+  await page.locator('.placed-items button').nth(1).click();
+  await expect(page.getByRole('slider', { name: /Rotation/ })).toHaveValue('45');
+  await page.getByRole('slider', { name: /Rotation/ }).fill('75');
+  await page.getByRole('button', { name: 'Save space', exact: true }).click();
+  await page.getByRole('link', { name: 'Home', exact: true }).click();
+  await page.getByRole('button', { name: /Open sample room/ }).click();
+  await page.locator('.placed-items button').nth(1).click();
+  await expect(page.getByRole('slider', { name: /Rotation/ })).toHaveValue('45');
+  await page.getByRole('button', { name: 'Save space', exact: true }).click();
+  const rooms = await savedRooms(page);
+  expect(rooms).toHaveLength(2);
+  expect(rooms[0].id).not.toBe(saved.id);
+  expect(rooms.find(room => room.id === saved.id).furniture[1].rotation).toBe(75);
+  expect(transforms(rooms[0].furniture)).toEqual(transforms(sample.furniture));
+});
